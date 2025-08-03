@@ -30,8 +30,8 @@ public class MultiFileCodeFileSaverTemplate extends CodeFileSaverTemplate<MultiF
     protected void saveFiles(MultiFileCodeResult result, String baseDirPath) {
         // 依次写入文件
         writeToFile(baseDirPath, "index.html", result.getHtmlCode());
-        writeToFile(baseDirPath, "index.css", result.getHtmlCode());
-        writeToFile(baseDirPath, "index.js", result.getHtmlCode());
+        writeToFile(baseDirPath, "style.css", result.getCssCode());
+        writeToFile(baseDirPath, "script.js", result.getJsCode());
     }
 
 
