@@ -104,11 +104,11 @@ public class AiCodeGeneratorFacade {
                 // 获取AI生成的结果
                 HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode(userMessage);
                 // 进行存储文件
-                yield CodeFileSaver.saveHtmlCodeResult(htmlCodeResult);
+                yield CodeFileSaverExecutor.executeSaver(htmlCodeResult, codeGenTypeEnum);
             }
             case MULTI_FILE -> {
                 MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMultiFileCode(userMessage);
-                yield CodeFileSaver.saveMultiFileCodeResult(multiFileCodeResult);
+                yield CodeFileSaverExecutor.executeSaver(multiFileCodeResult, codeGenTypeEnum);
             }
             default -> {
                 String errorMessage = "不支持的生成类型:" + codeGenTypeEnum.getValue();
