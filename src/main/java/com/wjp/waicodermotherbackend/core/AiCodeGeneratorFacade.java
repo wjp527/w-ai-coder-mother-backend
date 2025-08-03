@@ -45,6 +45,30 @@ public class AiCodeGeneratorFacade {
     }
 
     /**
+     * 生成并保存 HTML 代码
+     * @param userMessage
+     * @return
+     */
+    private File generateAndSaveHtmlCode(String userMessage) {
+        // 获取AI生成的结果
+        HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode(userMessage);
+        // 进行存储文件
+        return CodeFileSaver.saveHtmlCodeResult(htmlCodeResult);
+    }
+
+    /**
+     * 生成并保存多个文件代码
+     * @param userMessage 用户消息
+     * @return 保存的目录
+     */
+    private File generateAndSaveMultiFileCode(String userMessage) {
+        MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMultiFileCode(userMessage);
+        return CodeFileSaver.saveMultiFileCodeResult(multiFileCodeResult);
+    }
+
+    // region SSE 流失输出
+
+    /**
      * 统一入口: 根据类型生成并保存代码（SSE流式）
      * @param userMessage 用户消息
      * @param codeGenTypeEnum 代码生成类型
@@ -121,26 +145,8 @@ public class AiCodeGeneratorFacade {
                 });
     }
 
-    /**
-     * 生成并保存 HTML 代码
-     * @param userMessage
-     * @return
-     */
-    private File generateAndSaveHtmlCode(String userMessage) {
-        // 获取AI生成的结果
-        HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode(userMessage);
-        // 进行存储文件
-        return CodeFileSaver.saveHtmlCodeResult(htmlCodeResult);
-    }
 
-    /**
-     * 生成并保存多个文件代码
-     * @param userMessage 用户消息
-     * @return 保存的目录
-     */
-    private File generateAndSaveMultiFileCode(String userMessage) {
-        MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMultiFileCode(userMessage);
-        return CodeFileSaver.saveMultiFileCodeResult(multiFileCodeResult);
-    }
+
+    // endregion
 
 }
