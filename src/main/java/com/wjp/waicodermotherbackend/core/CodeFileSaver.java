@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * 文件保存器
  */
-public class CoreFileSaver {
+public class CodeFileSaver {
 
     /**
      * 文件保存目录

@@ -69,6 +69,13 @@
             <version>1.1.0-beta7</version>
         </dependency>
 
+        <!-- 响应式编程(用于SSE流式输出) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-reactor</artifactId>
+            <version>1.1.0-beta7</version>
+        </dependency>
+
 
         <!-- Mybatis Flex依赖 https://mybatis-flex.com/zh/others/codegen.html -->
         <dependency>
