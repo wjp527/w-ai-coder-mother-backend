@@ -28,9 +28,9 @@ public class AiCodeGeneratorFacade {
 
     /**
      * 统一入口: 根据类型生成代码流并保存代码
-     * @param codeStream
-     * @param codeGenTypeEnum
-     * @return
+     * @param codeStream AI返回的结果(流)
+     * @param codeGenTypeEnum 代码生成类型(业务类型 HTML 还是 MULTI_FILE)
+     * @return 生成的代码文件
      */
     public Flux<String> processCodeStream(Flux<String> codeStream ,CodeGenTypeEnum codeGenTypeEnum) {
         // 当流式返回生成代码完成后，在保存代码
@@ -45,6 +45,7 @@ public class AiCodeGeneratorFacade {
                     try {
                         String completeCode = codeBuilder.toString();
                         // 使用执行器解析代码
+                        // 内部会根据不同的业务类型进行执行对应的执行器
                         Object parsedResult = CodeParserExecutor.executeParser(completeCode, codeGenTypeEnum);
                         // 使用执行器保存代码
                         File saveDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenTypeEnum);
@@ -70,7 +71,9 @@ public class AiCodeGeneratorFacade {
 
         return switch (codeGenTypeEnum) {
             case HTML -> {
+                // AI返回的结果
                 Flux<String> result = aiCodeGeneratorService.generateHTMLCodeStream(userMessage);
+                // yield: 等到所有的数据都处理完成后再返回结果
                 yield processCodeStream(result, CodeGenTypeEnum.HTML);
             }
             case MULTI_FILE ->{
