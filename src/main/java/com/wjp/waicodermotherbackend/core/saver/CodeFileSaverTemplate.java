@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
+import com.wjp.waicodermotherbackend.exception.ThrowUtils;
 import com.wjp.waicodermotherbackend.model.enums.CodeGenTypeEnum;
 
 import java.io.File;
@@ -23,14 +24,15 @@ public abstract class CodeFileSaverTemplate<T> {
     /**
      * 模版方法: 保存代码的标准流程
      * @param result 代码结果对象
+     * @Param appId  应用id
      * @return 保存的目录
      */
-    public final File saveCode(T result) {
+    public final File saveCode(T result, Long appId) {
         // 1.验证输入
         validateInput(result);
 
         // 2.构建唯一目录
-        String baseDirPath = buildUniqueDir();
+        String baseDirPath = buildUniqueDir(appId);
 
         // 3.保存文件（具体实现由子类提供）
         saveFiles(result, baseDirPath);
@@ -55,12 +57,14 @@ public abstract class CodeFileSaverTemplate<T> {
      *
      * @return
      */
-    protected String buildUniqueDir() {
+    protected String buildUniqueDir(Long appId) {
+//        ThrowUtils.throwIf(appId == null, ErrorCode.PARAMS_ERROR, "appId不能为空");
+        if(appId == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "appId不能为空");
+        }
         // 获取业务类型
         String bizType = getCodeType().getValue();
-        // 雪花算法
-        String snowflakeNextIdStr = IdUtil.getSnowflakeNextIdStr();
-        String uniqueDirName = StrUtil.format("{}_{}", bizType, snowflakeNextIdStr);
+        String uniqueDirName = StrUtil.format("{}_{}", bizType, appId);
         String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
         FileUtil.mkdir(dirPath);
         return dirPath;
