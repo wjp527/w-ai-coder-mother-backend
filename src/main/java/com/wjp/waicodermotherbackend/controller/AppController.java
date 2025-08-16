@@ -18,20 +18,18 @@ import com.wjp.waicodermotherbackend.model.dto.app.*;
 import com.wjp.waicodermotherbackend.model.entity.User;
 import com.wjp.waicodermotherbackend.model.enums.CodeGenTypeEnum;
 import com.wjp.waicodermotherbackend.model.enums.UserRoleEnum;
+import com.wjp.waicodermotherbackend.model.vo.AppVO;
 import com.wjp.waicodermotherbackend.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.wjp.waicodermotherbackend.model.entity.App;
 import com.wjp.waicodermotherbackend.service.AppService;
-import org.yaml.snakeyaml.representer.BaseRepresenter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +83,24 @@ public class AppController {
                 ));
     }
 
+    /**
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
+    }
 
 
     @PostMapping("/add")
@@ -185,7 +201,7 @@ public class AppController {
      * @return
      */
     @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<AppVO>> listMAppVoByPage(@RequestBody AppQueryRequest appQueryRequest, HttpServletRequest request) {
+    public BaseResponse<Page<AppVO>> listMyAppVoByPage(@RequestBody AppQueryRequest appQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
         User loginUser = userService.getLoginUser(request);
         // 限制每页最多20条数据
@@ -238,7 +254,7 @@ public class AppController {
      */
     @PostMapping("/admin/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> deleteApp(@RequestBody DeleteRequest deleteRequest) {
+    public BaseResponse<Boolean> deleteAppByAdmin(@RequestBody DeleteRequest deleteRequest) {
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         Long id = deleteRequest.getId();
         // 判断是否存在
@@ -279,7 +295,7 @@ public class AppController {
      */
     @PostMapping("/admin/list/page/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<AppVO>> listAppVOByPage(@RequestBody AppQueryRequest appQueryRequest) {
+    public BaseResponse<Page<AppVO>> listAppVoByPageByAdmin(@RequestBody AppQueryRequest appQueryRequest) {
         ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
         int pageNum = appQueryRequest.getPageNum();
         int pageSize = appQueryRequest.getPageSize();

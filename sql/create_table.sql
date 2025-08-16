@@ -41,3 +41,6 @@ create table app
     INDEX idx_userId (userId)            -- 提升基于用户 ID 的查询性能
 ) comment '应用' collate = utf8mb4_unicode_ci;
 
+alter table app
+    add version int default 1 null comment '版本号';
+

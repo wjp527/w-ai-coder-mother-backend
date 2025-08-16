@@ -10,6 +10,8 @@ import com.wjp.waicodermotherbackend.model.enums.CodeGenTypeEnum;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 
+import static com.wjp.waicodermotherbackend.constant.AppConstant.CODE_OUTPUT_ROOT_DIR;
+
 /**
  * 文件保存器
  */
@@ -19,7 +21,7 @@ public class CodeFileSaver {
     /**
      * 文件保存目录
      */
-    private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    private static final String FILE_SAVE_ROOT_DIR = CODE_OUTPUT_ROOT_DIR;
 
     /**
      * 保存 HTML 网页代码
