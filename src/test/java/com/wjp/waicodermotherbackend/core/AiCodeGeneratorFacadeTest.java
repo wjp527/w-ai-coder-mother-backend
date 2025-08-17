@@ -24,14 +24,14 @@ class AiCodeGeneratorFacadeTest {
     @Test
     void generateAndSaveCode() {
 //        File file = aiCodeGeneratorFacade.generateAndSaveCode("生成一个π的博客，不要超过20行", CodeGenTypeEnum.HTML);
-        File file = aiCodeGeneratorFacade.generateAndSaveCode("生成一个π的博客，不要超过20行", CodeGenTypeEnum.MULTI_FILE, 1L, 1);
+        File file = aiCodeGeneratorFacade.generateAndSaveCode("生成一个π的博客，不要超过20行", CodeGenTypeEnum.MULTI_FILE, 1L);
         Assertions.assertNotNull(file);
 
     }
 
     @Test
     void generateAndSaveCodeStream() {
-        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE, 1L, 1);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站", CodeGenTypeEnum.MULTI_FILE, 1L);
         // 阻塞等待所有数据收集完成
         List<String> result = codeStream.collectList().block();
         // 验证结果

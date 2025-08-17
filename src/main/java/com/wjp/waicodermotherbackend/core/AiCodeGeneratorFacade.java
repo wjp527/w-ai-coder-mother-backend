@@ -1,6 +1,7 @@
 package com.wjp.waicodermotherbackend.core;
 
 import com.wjp.waicodermotherbackend.ai.AiCodeGeneratorService;
+import com.wjp.waicodermotherbackend.ai.AiCodeGeneratorServiceFactory;
 import com.wjp.waicodermotherbackend.ai.model.HtmlCodeResult;
 import com.wjp.waicodermotherbackend.ai.model.MultiFileCodeResult;
 import com.wjp.waicodermotherbackend.core.parser.CodeParserExecutor;
@@ -22,8 +23,15 @@ import java.io.File;
 @Slf4j
 public class AiCodeGeneratorFacade {
 
+    // 单个 AI Service
+//    @Resource
+//    private AiCodeGeneratorService aiCodeGeneratorService;
+
+    /**
+     * 根据 appId 生成独立的 AI Service
+     */
     @Resource
-    private AiCodeGeneratorService aiCodeGeneratorService;
+    private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
 
 
     /**
@@ -69,6 +77,9 @@ public class AiCodeGeneratorFacade {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成器类型为空");
         }
 
+        // 根据 appId 获取相应的 AI Service
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+
         return switch (codeGenTypeEnum) {
             case HTML -> {
                 // AI返回的结果
@@ -97,10 +108,13 @@ public class AiCodeGeneratorFacade {
      * @param codeGenTypeEnum 代码生成类型
      * @return 生成的代码文件
      */
-    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum, Long appId, Integer version) {
+    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
         if(codeGenTypeEnum == null) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成器类型为空");
         }
+
+        // 根据 appId 获取相应的 AI Service
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
 
         return switch (codeGenTypeEnum) {
             case HTML -> {

@@ -1,0 +1,37 @@
+package com.wjp.waicodermotherbackend.config;
+
+import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * Redis 持久化对话记忆
+ */
+@Configuration
+@Data
+public class RedisChatMemoryStoreConfig {
+
+    @Value("${spring.data.redis.host:localhost}")
+    private String host;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int port;
+
+    @Value("${spring.data.redis.password:}")
+    private String password;
+
+    @Value("${spring.data.redis.ttl:3600}")
+    private long ttl;
+
+    @Bean
+    public RedisChatMemoryStore redisChatMemoryStore() {
+        return RedisChatMemoryStore.builder()
+                .host(host)
+                .port(port)
+                .password(password.isEmpty() ? null : password)
+                .ttl(ttl)
+                .build();
+    }
+}
