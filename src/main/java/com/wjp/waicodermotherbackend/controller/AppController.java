@@ -33,6 +33,9 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
+import cn.hutool.core.io.FileUtil;
+import java.util.HashMap;
 
 /**
  * 应用 控制层。
@@ -323,6 +326,44 @@ public class AppController {
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
         AppVO appVO = appService.getAppVO(app);
         return ResultUtils.success(appVO);
+    }
+
+    /**
+     * 获取AI生成的代码片段
+     * 
+     * 该方法返回指定应用的最新生成代码，包括HTML、CSS、JavaScript等文件内容。
+     * 主要用于代码编辑、版本比较、代码分享等场景。
+     * 
+     * @param appId 应用ID
+     * @param request HTTP请求对象
+     * @return 包含代码文件内容的响应
+     */
+    @GetMapping("/code/snippets/{appId}")
+    public BaseResponse<Map<String, String>> getCodeSnippets(@PathVariable Long appId, 
+                                                        HttpServletRequest request) {
+        // 1. 参数校验
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR);
+        
+        // 2. 获取登录用户
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        
+        // 3. 查询应用信息
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        
+        // 4. 权限验证
+        if (!app.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        
+        // 5. 读取代码文件
+        String codeGenType = app.getCodeGenType();
+        String sourceDirName = codeGenType + "_" + appId;
+        String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+        
+        // 6. 返回代码片段
+        return ResultUtils.success(appService.getCodeSnippets(sourceDirPath));
     }
 
     /**
