@@ -83,6 +83,12 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Spring Session + Redis -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
+
 
         <!-- 响应式编程(用于SSE流式输出) -->
         <dependency>

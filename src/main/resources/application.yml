@@ -18,11 +18,19 @@ spring:
       port: 6379
       password:
       ttl: 3600
+  session:
+    store-type: redis
+    # session: 30天过期 [后端的过期]
+    timeout: 259200
 
 server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30天过期 [前端的过期]
+    session:
+      cookie:
+        max-age: 259200
 
 # springdoc-openapi项目配置
 springdoc:

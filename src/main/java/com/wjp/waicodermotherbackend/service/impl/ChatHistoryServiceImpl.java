@@ -75,8 +75,8 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
 
     /**
      * 将数据库的会话记忆保存到内存中
-     * @param appId
-     * @param chatMemory
+     * @param appId 应用id
+     * @param chatMemory 在哪个会话记忆存储
      * @param maxCount
      * @return
      */
@@ -86,6 +86,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
             // 直接构造查询条件，起始点为1 而不是0，用于排除最新的用户消息
             QueryWrapper queryWrapper = QueryWrapper.create()
                     .eq(ChatHistory::getAppId, appId)
+                    // 找到最新的一条数据，false: 降序
                     .orderBy(ChatHistory::getCreateTime, false)
                     .limit(1, maxCount);
             List<ChatHistory> historyList = this.list(queryWrapper);
@@ -100,9 +101,11 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
             // 先清理历史缓存，防止重复加载
             chatMemory.clear();
             for (ChatHistory history : historyList) {
+                // 用户的消息
                 if(ChatHistoryMessageTypeEnum.USER.getValue().equals(history.getMessageType())) {
                     chatMemory.add(UserMessage.from(history.getMessage()));
                 } else if (ChatHistoryMessageTypeEnum.AI.getValue().equals(history.getMessageType())) {
+                    // AI的消息
                     chatMemory.add(AiMessage.from(history.getMessage()));
                 }
                 loadedCount++;

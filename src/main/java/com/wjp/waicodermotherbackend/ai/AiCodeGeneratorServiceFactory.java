@@ -60,6 +60,7 @@ public class AiCodeGeneratorServiceFactory {
         MessageWindowChatMemory chatMemory = MessageWindowChatMemory
                 .builder()
                 .id(appId)
+                // 会话存储的位置: Redis
                 .chatMemoryStore(redisChatMemoryStore)
                 .maxMessages(20)
                 .build();

@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
+// 自动排除掉 RedisEmbeddingStoreAutoConfiguration（RAG检索增强模式）
 @SpringBootApplication(exclude = {RedisEmbeddingStoreAutoConfiguration.class})
 @EnableAspectJAutoProxy(exposeProxy = true)
 // 扫描mapper包
