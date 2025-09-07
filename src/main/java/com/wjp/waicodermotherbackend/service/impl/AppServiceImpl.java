@@ -6,6 +6,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.wjp.waicodermotherbackend.ai.handle.StreamHandlerExecutor;
 import com.wjp.waicodermotherbackend.constant.AppConstant;
 import com.wjp.waicodermotherbackend.core.AiCodeGeneratorFacade;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
@@ -96,6 +97,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
     private ChatHistoryService chatHistoryService;
 
     /**
+     * 流式处理器执行器
+     */
+    @Resource
+    private StreamHandlerExecutor streamHandlerExecutor;
+
+    /**
      * 通过AI对话生成应用代码
      *
      * 该方法实现了AI驱动的代码生成功能，用户可以通过自然语言描述需求，
@@ -149,22 +156,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         // 5. 在调用AI服务之前，先保存用户消息到数据库中
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
         // 6. 调用AI代码生成器，返回流式响应
-        Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
         // 7.收集 AI 响应的内容，并且在完成后保存记录到对话历史
-        StringBuilder aiResponseBuilder = new StringBuilder();
-        return contentFlux.map(chunk -> {
-            // 实时收集 AI 响应的内容
-            aiResponseBuilder.append(chunk);
-            return chunk;
-        }).doOnComplete(() -> {
-            // 流式返回完成后，保存 AI 消息到对话历史中
-            String aiResponse = aiResponseBuilder.toString();
-            chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-        }).doOnError(err -> {
-            // 如果 AI 回复失败，也需要保存记录到数据库中
-            String errorMessage = "AI 回复失败: " + err.getMessage();
-            chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-        });
+        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
     }
 
     /**
