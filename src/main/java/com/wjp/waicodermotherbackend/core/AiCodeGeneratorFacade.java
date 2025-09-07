@@ -37,10 +37,10 @@ public class AiCodeGeneratorFacade {
     /**
      * 统一入口: 根据类型生成代码流并保存代码
      * @param codeStream AI返回的结果(流)
-     * @param codeGenTypeEnum 代码生成类型(业务类型 HTML 还是 MULTI_FILE)
+     * @param codeGenType 代码生成类型(业务类型 HTML 还是 MULTI_FILE)
      * @return 生成的代码文件
      */
-    public Flux<String> processCodeStream(Flux<String> codeStream ,CodeGenTypeEnum codeGenTypeEnum, Long appId) {
+    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType, Long appId) {
         // 当流式返回生成代码完成后，在保存代码
         StringBuilder codeBuilder = new StringBuilder();
         return codeStream
@@ -54,9 +54,9 @@ public class AiCodeGeneratorFacade {
                         String completeCode = codeBuilder.toString();
                         // 使用执行器解析代码
                         // 内部会根据不同的业务类型进行执行对应的执行器
-                        Object parsedResult = CodeParserExecutor.executeParser(completeCode, codeGenTypeEnum);
+                        Object parsedResult = CodeParserExecutor.executeParser(completeCode, codeGenType);
                         // 使用执行器保存代码
-                        File saveDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenTypeEnum, appId);
+                        File saveDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenType, appId);
                         log.info("保存成功，路径为: " + saveDir.getAbsolutePath());
                     } catch(Exception e) {
                         log.error("保存失败: " + e.getMessage());
@@ -77,8 +77,8 @@ public class AiCodeGeneratorFacade {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成器类型为空");
         }
 
-        // 根据 appId 获取相应的 AI Service
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        // 根据 appId 获取相应的 AI Service [根据代码生成类型获取对应的AI服务]
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum);
 
         return switch (codeGenTypeEnum) {
             case HTML -> {
@@ -87,9 +87,13 @@ public class AiCodeGeneratorFacade {
                 // yield: 等到所有的数据都处理完成后再返回结果
                 yield processCodeStream(result, CodeGenTypeEnum.HTML, appId);
             }
-            case MULTI_FILE ->{
+            case MULTI_FILE -> {
                 Flux<String> result = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
                 yield processCodeStream(result, CodeGenTypeEnum.MULTI_FILE, appId);
+            }
+            case VUE_PROJECT -> {
+                Flux<String> codeStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
+                yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型:" + codeGenTypeEnum.getValue();
@@ -114,7 +118,7 @@ public class AiCodeGeneratorFacade {
         }
 
         // 根据 appId 获取相应的 AI Service
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum);
 
         return switch (codeGenTypeEnum) {
             case HTML -> {
@@ -133,8 +137,4 @@ public class AiCodeGeneratorFacade {
             }
         };
     }
-
-
-
-
 }
