@@ -9,6 +9,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.wjp.waicodermotherbackend.ai.handle.StreamHandlerExecutor;
 import com.wjp.waicodermotherbackend.constant.AppConstant;
 import com.wjp.waicodermotherbackend.core.AiCodeGeneratorFacade;
+import com.wjp.waicodermotherbackend.core.builder.VueProjectBuilder;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
 import com.wjp.waicodermotherbackend.exception.ThrowUtils;
@@ -101,6 +102,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
      */
     @Resource
     private StreamHandlerExecutor streamHandlerExecutor;
+
+    /**
+     * Vue项目构建器
+     */
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
     /**
      * 通过AI对话生成应用代码
@@ -227,7 +234,19 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "原目录不存在,请先生成代码");
         }
 
-        // 7. 复制文件到部署目录，创建新版本
+        // 7.针对Vue 项目特殊处理，执行构建
+        CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
+        if(CodeGenTypeEnum.VUE_PROJECT == codeGenTypeEnum) {
+            // Vue项目需要构建
+            boolean buildSuccess = vueProjectBuilder.buildProject(sourceDirPath);
+            // 检查dist目录是否存在
+            File distDir = new File(sourceDirPath, "dist");
+            ThrowUtils.throwIf(!distDir.exists(), SYSTEM_ERROR, "Vue项目构建完成但未生成 dist 目录");
+            // 构建完成后，需要将构建后的文件复制到部署目录
+            sourceDir = distDir;
+        }
+
+        // 8. 复制文件到部署目录，创建新版本
         String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey + File.separator + "V" + ++version;
         try {
             // 复制源代码到部署目录，支持递归复制
@@ -236,7 +255,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署失败: " + e.getMessage());
         }
 
-        // 8. 更新数据库中的应用部署信息
+        // 9. 更新数据库中的应用部署信息
         App updateApp = new App();
         updateApp.setId(appId);
         updateApp.setDeployKey(deployKey);
@@ -245,7 +264,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
 
-        // 9. 返回部署后的访问地址
+        // 10. 返回部署后的访问地址
         return String.format("%s/%s/V%s", AppConstant.CODE_DEPLOY_HOST, deployKey, version);
     }
 
