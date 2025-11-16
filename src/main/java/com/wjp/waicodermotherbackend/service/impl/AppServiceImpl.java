@@ -14,7 +14,6 @@ import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
 import com.wjp.waicodermotherbackend.exception.ThrowUtils;
 import com.wjp.waicodermotherbackend.model.dto.app.AppQueryRequest;
-import com.wjp.waicodermotherbackend.model.enums.AppCodeGenEnum;
 import com.wjp.waicodermotherbackend.model.enums.ChatHistoryMessageTypeEnum;
 import com.wjp.waicodermotherbackend.model.vo.AppVO;
 import com.wjp.waicodermotherbackend.model.entity.App;
@@ -24,17 +23,11 @@ import com.wjp.waicodermotherbackend.model.enums.CodeGenTypeEnum;
 import com.wjp.waicodermotherbackend.model.vo.UserVO;
 import com.wjp.waicodermotherbackend.service.AppService;
 import com.wjp.waicodermotherbackend.service.ChatHistoryService;
+import com.wjp.waicodermotherbackend.service.ScreenshotService;
 import com.wjp.waicodermotherbackend.service.UserService;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.HandlerMapping;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
@@ -108,6 +101,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
      */
     @Resource
     private VueProjectBuilder vueProjectBuilder;
+
+    @Resource
+    private ScreenshotService screenshotService;
 
     /**
      * 通过AI对话生成应用代码
@@ -265,7 +261,32 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
 
         // 10. 返回部署后的访问地址
-        return String.format("%s/%s/V%s", AppConstant.CODE_DEPLOY_HOST, deployKey, version);
+        String appDeployUrl = String.format("%s/%s/V%s", AppConstant.CODE_DEPLOY_HOST, deployKey, version);
+
+        // 11、异步生成截图并且更新应用封面
+        generateAppScreenshotAsync(appId, appDeployUrl);
+        return appDeployUrl;
+    }
+
+    /**
+     * 异步生成应用截图，并更新封面
+     * @param appId 应用ID
+     * @param appDeployUrl 应用部署URL
+     */
+    @Override
+    public void generateAppScreenshotAsync(Long appId, String appDeployUrl) {
+        // 启用虚拟线程并执行
+        Thread.startVirtualThread(() -> {
+            // 调用 截图服务 生成图片并上传
+            String screenShotUrl = screenshotService.generateAndUploadScreenshot(appDeployUrl);
+            // 更新数据库的应用封面
+            App updateApp = new App();
+            updateApp.setId(appId);
+            updateApp.setCover(screenShotUrl);
+            boolean result = this.updateById(updateApp);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新应用封面失败");
+        });
+
     }
 
     /**

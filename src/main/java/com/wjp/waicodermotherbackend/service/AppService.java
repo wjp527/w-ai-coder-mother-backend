@@ -114,6 +114,13 @@ public interface AppService extends IService<App> {
     String deployApp(Long appId, User loginUser);
 
     /**
+     * 异步生成应用截图，并更新封面
+     * @param appId 应用ID
+     * @param appDeployUrl 应用部署URL
+     */
+    void generateAppScreenshotAsync(Long appId, String appDeployUrl);
+
+    /**
      * 将应用实体转换为视图对象
      * <p>
      * 该方法将数据库中的应用实体对象转换为适合前端展示的视图对象。
