@@ -3,6 +3,7 @@ package com.wjp.waicodermotherbackend.service;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
+import com.wjp.waicodermotherbackend.model.dto.app.AppAddRequest;
 import com.wjp.waicodermotherbackend.model.dto.app.AppQueryRequest;
 import com.wjp.waicodermotherbackend.model.enums.AppCodeGenEnum;
 import com.wjp.waicodermotherbackend.model.vo.AppVO;
@@ -112,6 +113,8 @@ public interface AppService extends IService<App> {
      * System.out.println("应用已部署，访问地址: " + deployUrl);
      */
     String deployApp(Long appId, User loginUser);
+
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
     /**
      * 异步生成应用截图，并更新封面

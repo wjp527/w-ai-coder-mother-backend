@@ -4,8 +4,10 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.wjp.waicodermotherbackend.ai.AiCodeGenTypeRoutingService;
 import com.wjp.waicodermotherbackend.ai.handle.StreamHandlerExecutor;
 import com.wjp.waicodermotherbackend.constant.AppConstant;
 import com.wjp.waicodermotherbackend.core.AiCodeGeneratorFacade;
@@ -13,6 +15,7 @@ import com.wjp.waicodermotherbackend.core.builder.VueProjectBuilder;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
 import com.wjp.waicodermotherbackend.exception.ThrowUtils;
+import com.wjp.waicodermotherbackend.model.dto.app.AppAddRequest;
 import com.wjp.waicodermotherbackend.model.dto.app.AppQueryRequest;
 import com.wjp.waicodermotherbackend.model.enums.ChatHistoryMessageTypeEnum;
 import com.wjp.waicodermotherbackend.model.vo.AppVO;
@@ -26,6 +29,7 @@ import com.wjp.waicodermotherbackend.service.ChatHistoryService;
 import com.wjp.waicodermotherbackend.service.ScreenshotService;
 import com.wjp.waicodermotherbackend.service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -104,6 +108,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
     @Resource
     private ScreenshotService screenshotService;
+
+
+    @Resource
+    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+
 
     /**
      * 通过AI对话生成应用代码
@@ -266,6 +275,30 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         // 11、异步生成截图并且更新应用封面
         generateAppScreenshotAsync(appId, appDeployUrl);
         return appDeployUrl;
+    }
+
+    @Override
+    public Long createApp(AppAddRequest appAddRequest, User loginUser) {
+        // 参数校验
+        String initPrompt = appAddRequest.getInitPrompt();
+        ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 Prompt 不能为空");
+        // 构造入库对象
+        App app = new App();
+        BeanUtil.copyProperties(appAddRequest, app);
+        app.setUserId(loginUser.getId());
+        // 应用名称暂时为 initPrmpt 前12位
+        app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+        // 暂时设置为多文件生成
+//        app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+        // Vue工程项目生成
+//        app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
+        // AI 根据 用户提示词 自动选择生成模式
+        CodeGenTypeEnum selectedCodeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
+        app.setCodeGenType(selectedCodeGenType.getValue());
+        // 插入数据库
+        boolean result = this.save(app);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return app.getId();
     }
 
     /**
