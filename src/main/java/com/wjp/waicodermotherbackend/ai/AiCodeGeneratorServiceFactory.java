@@ -2,7 +2,7 @@ package com.wjp.waicodermotherbackend.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.wjp.waicodermotherbackend.ai.tools.FileWriteTool;
+import com.wjp.waicodermotherbackend.ai.tools.*;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
 import com.wjp.waicodermotherbackend.model.enums.CodeGenTypeEnum;
@@ -52,6 +52,10 @@ public class AiCodeGeneratorServiceFactory {
     @Resource
     private ChatHistoryService chatHistoryService;
 
+    // 获取 工具实例
+    @Resource
+    private ToolManager toolManager;
+
 
     /**
      * AI 服务实例缓存
@@ -96,7 +100,7 @@ public class AiCodeGeneratorServiceFactory {
                     .streamingChatModel(reasoningStreamingChatModel)
                     .chatMemoryProvider(memoryId -> chatMemory)
                     // 注册工具
-                    .tools(new FileWriteTool())
+                    .tools(toolManager.getAllTools())
                     // 处理工具调用幻觉问题
                     // AI调用了一个我们不存在的工具，我们该怎么处理
                     .hallucinatedToolNameStrategy(toolExecutionRequest ->
