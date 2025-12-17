@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.wjp.waicodermotherbackend.ai.AiCodeGenTypeRoutingService;
+import com.wjp.waicodermotherbackend.ai.AiCodeGenTypeRoutingServiceFactory;
 import com.wjp.waicodermotherbackend.ai.handle.StreamHandlerExecutor;
 import com.wjp.waicodermotherbackend.constant.AppConstant;
 import com.wjp.waicodermotherbackend.core.AiCodeGeneratorFacade;
@@ -111,7 +112,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
 
     @Resource
-    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+    private AiCodeGenTypeRoutingServiceFactory aiCodeGenTypeRoutingServiceFactory;
 
 
     /**
@@ -292,6 +293,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 //        app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
         // Vue工程项目生成
 //        app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
+        // 使用 AI 只能选择代码生成类型(多例模式)
+        AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService = aiCodeGenTypeRoutingServiceFactory.createAiCodeGenTypeRoutingService();
         // AI 根据 用户提示词 自动选择生成模式
         CodeGenTypeEnum selectedCodeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
         app.setCodeGenType(selectedCodeGenType.getValue());
