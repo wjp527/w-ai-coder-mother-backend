@@ -1,14 +1,11 @@
 package com.wjp.waicodermotherbackend.ai.handle;
-
-import cn.hutool.core.io.FileUtil;
+ 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.wjp.waicodermotherbackend.ai.model.message.*;
 import com.wjp.waicodermotherbackend.ai.tools.BaseTool;
 import com.wjp.waicodermotherbackend.ai.tools.ToolManager;
-import com.wjp.waicodermotherbackend.constant.AppConstant;
-import com.wjp.waicodermotherbackend.core.builder.VueProjectBuilder;
 import com.wjp.waicodermotherbackend.model.entity.User;
 import com.wjp.waicodermotherbackend.model.enums.ChatHistoryMessageTypeEnum;
 import com.wjp.waicodermotherbackend.service.ChatHistoryService;
@@ -28,8 +25,6 @@ import java.util.Set;
 @Component
 public class JsonMessageStreamHandler {
 
-    @Resource
-    private VueProjectBuilder vueProjectBuilder;
 
     // 工具管理
     @Resource
@@ -63,10 +58,7 @@ public class JsonMessageStreamHandler {
                     String aiResponse = chatHistoryStringBuilder.toString();
                     chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
 
-                    // 获取到项目路径
-                    String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
-                    // 异步构建 Vue项目
-                    vueProjectBuilder.buildProjectAsync(projectPath);
+
 
                 })
                 .doOnError(error -> {

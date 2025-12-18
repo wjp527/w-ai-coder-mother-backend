@@ -8,6 +8,8 @@ import com.wjp.waicodermotherbackend.ai.model.MultiFileCodeResult;
 import com.wjp.waicodermotherbackend.ai.model.message.AIResponseMessage;
 import com.wjp.waicodermotherbackend.ai.model.message.ToolExecutedMessage;
 import com.wjp.waicodermotherbackend.ai.model.message.ToolRequestMessage;
+import com.wjp.waicodermotherbackend.constant.AppConstant;
+import com.wjp.waicodermotherbackend.core.builder.VueProjectBuilder;
 import com.wjp.waicodermotherbackend.core.parser.CodeParserExecutor;
 import com.wjp.waicodermotherbackend.core.saver.CodeFileSaverExecutor;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
@@ -39,6 +41,9 @@ public class AiCodeGeneratorFacade {
      */
     @Resource
     private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
+
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
 
     /**
@@ -100,7 +105,7 @@ public class AiCodeGeneratorFacade {
             }
             case VUE_PROJECT -> {
                 TokenStream tokenStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
-                yield processTokenStream(tokenStream);
+                yield processTokenStream(tokenStream, appId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型:" + codeGenTypeEnum.getValue();
@@ -113,9 +118,10 @@ public class AiCodeGeneratorFacade {
      * 将 TokenStream 转换为 Flux<String>，并传递工具调用信息
      *
      * @param tokenStream TokenStream 对象
+     * @param appId 应用ID
      * @return Flux<String> 流式响应
      */
-    private Flux<String> processTokenStream(TokenStream tokenStream) {
+    private Flux<String> processTokenStream(TokenStream tokenStream, Long appId) {
         // 创建 Flux 对象
         // sink: 往流里面加数据
         return Flux.create(sink -> {
@@ -137,6 +143,10 @@ public class AiCodeGeneratorFacade {
                         sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
                     })
                     .onCompleteResponse((ChatResponse response) -> {
+                        // 获取到项目路径
+                        String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
+                        // 执行 Vue 项目构建（同步执行，确保预览时项目已就绪）
+                        vueProjectBuilder.buildProject(projectPath);
                         // 调用完毕
                         sink.complete();
                     })
