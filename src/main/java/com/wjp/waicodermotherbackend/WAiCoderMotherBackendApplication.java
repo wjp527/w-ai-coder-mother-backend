@@ -4,8 +4,11 @@ import dev.langchain4j.community.store.embedding.redis.spring.RedisEmbeddingStor
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
+// 开启 Spring Data 的缓存注解
+@EnableCaching
 // 自动排除掉 RedisEmbeddingStoreAutoConfiguration（RAG检索增强模式）
 @SpringBootApplication(exclude = {RedisEmbeddingStoreAutoConfiguration.class})
 @EnableAspectJAutoProxy(exposeProxy = true)

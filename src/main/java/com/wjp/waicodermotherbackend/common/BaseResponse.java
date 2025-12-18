@@ -2,6 +2,7 @@ package com.wjp.waicodermotherbackend.common;
 
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
