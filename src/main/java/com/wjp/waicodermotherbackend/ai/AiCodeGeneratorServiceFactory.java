@@ -2,6 +2,7 @@ package com.wjp.waicodermotherbackend.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wjp.waicodermotherbackend.ai.guardrail.PromptSafetyInputGuardrail;
 import com.wjp.waicodermotherbackend.ai.tools.*;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
@@ -98,7 +99,10 @@ public class AiCodeGeneratorServiceFactory {
                         .hallucinatedToolNameStrategy(toolExecutionRequest ->
                                 ToolExecutionResultMessage.from(toolExecutionRequest,
                                         "Error: there is no tool called " + toolExecutionRequest.name())
-                        ).build();
+                        )
+                        // 使用 Prompt 安全审查护轨
+                        .inputGuardrails(new PromptSafetyInputGuardrail())
+                        .build();
             }
             // HTML ，多文件生成，使用流式模型
             case HTML , MULTI_FILE ->
@@ -109,6 +113,8 @@ public class AiCodeGeneratorServiceFactory {
                         .chatModel(chatModel)
                         .streamingChatModel(openAiStreamingChatModel)
                         .chatMemory(chatMemory)
+                        // 使用 Prompt 安全审查护轨
+                        .inputGuardrails(new PromptSafetyInputGuardrail())
                         .build();
             }
 
