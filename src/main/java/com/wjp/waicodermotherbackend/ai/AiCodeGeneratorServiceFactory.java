@@ -3,6 +3,7 @@ package com.wjp.waicodermotherbackend.ai;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wjp.waicodermotherbackend.ai.guardrail.PromptSafetyInputGuardrail;
+import com.wjp.waicodermotherbackend.ai.guardrail.RetryOutputGuardrail;
 import com.wjp.waicodermotherbackend.ai.tools.*;
 import com.wjp.waicodermotherbackend.exception.BusinessException;
 import com.wjp.waicodermotherbackend.exception.ErrorCode;
@@ -100,8 +101,12 @@ public class AiCodeGeneratorServiceFactory {
                                 ToolExecutionResultMessage.from(toolExecutionRequest,
                                         "Error: there is no tool called " + toolExecutionRequest.name())
                         )
+                        // 允许最多20个连续的调用
+                        .maxSequentialToolsInvocations(20)
                         // 使用 Prompt 安全审查护轨
                         .inputGuardrails(new PromptSafetyInputGuardrail())
+                        // 重试输出护轨, 为了流式输出，这里不使用
+                        // .outputGuardrails(new RetryOutputGuardrail())
                         .build();
             }
             // HTML ，多文件生成，使用流式模型
@@ -113,8 +118,12 @@ public class AiCodeGeneratorServiceFactory {
                         .chatModel(chatModel)
                         .streamingChatModel(openAiStreamingChatModel)
                         .chatMemory(chatMemory)
+                        // 允许最多20个连续的调用
+                        .maxSequentialToolsInvocations(20)
                         // 使用 Prompt 安全审查护轨
                         .inputGuardrails(new PromptSafetyInputGuardrail())
+                        // 重试输出护轨, 为了流式输出，这里不使用
+                        // .outputGuardrails(new RetryOutputGuardrail())
                         .build();
             }
 

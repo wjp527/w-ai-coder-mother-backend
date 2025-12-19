@@ -56,8 +56,10 @@ langchain4j:
       log-responses: true
       # 默认最大token数
       max-tokens: 8192
+      # 重试次数
+      max-retries: 3
       # 严格保证结构化输出有效
-#      strict-json-schema: true
+    #      strict-json-schema: true
 #      response-format: json_object
     # sse流式输出
     streaming-chat-model:
@@ -78,9 +80,10 @@ langchain4j:
       log-responses: true
     # 智能路由 AI 模型配置（用于简单的分类任务）
     routing-chat-model:
-      base-url: https://api.deepseek.com
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
       api-key: <Your API Key>
-      model-name: deepseek-chat
+      model-name: qwen-turbo
+      max-tokens: 100
       log-requests: true
       log-responses: true
 
